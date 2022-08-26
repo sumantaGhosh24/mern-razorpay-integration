@@ -1,0 +1,21 @@
+{
+  "name": "mern-payment-integration-razorpay",
+  "version": "1.0.0",
+  "description": "mern stack payment integration with razorpay",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "sumanta ghosh",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.20.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.1",
+    "express": "^4.18.1",
+    "mongoose": "^6.5.3",
+    "nodemon": "^2.0.19",
+    "razorpay": "^2.8.3",
+    "uniqid": "^5.4.0"
+  }
+}
