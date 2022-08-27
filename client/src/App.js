@@ -1,71 +1,68 @@
-import React, {useState} from "react";
+import React, {useState, useEffect} from "react";
 
-function loadScript(src) {
-  return new Promise((resolve) => {
-    const script = document.createElement("script");
-    script.src = src;
-    script.onload = () => {
-      resolve(true);
-    };
-    script.onerror = () => {
-      resolve(false);
-    };
-    document.body.appendChild(script);
+import {getOrder} from "./apiCalls";
+import {REACT_APP_BACKEND, REACT_APP_DATA_KEY} from "./config";
+
+const App = () => {
+  const [values, setValues] = useState({
+    amount: 0,
+    orderId: "",
+    error: "",
+    success: false,
   });
-}
 
-const __DEV__ = document.domain === "localhost";
+  const {amount, orderId, success, error} = values;
+  useEffect(() => {
+    createOrder();
+  }, []);
 
-function App() {
-  const [name, setName] = useState("John");
+  const createOrder = () => {
+    getOrder().then((response) => {
+      console.log(response);
+      if (response.error) {
+        setValues({...values, error: response.error, success: false});
+      } else {
+        setValues({
+          ...values,
+          error: "",
+          success: true,
+          orderId: response.id,
+          amount: response.amount,
+        });
+      }
+    });
+  };
 
-  async function displayRazorpay() {
-    const res = await loadScript(
-      "https://checkout.razorpay.com/v1/checkout.js"
-    );
-    if (!res) {
-      alert("razorpay sdk failed to load, are you online?");
+  useEffect(() => {
+    if (amount > 0 && orderId != "") {
+      showRazoryPay();
     }
-    const data = await fetch("http://localhost:5000/razorpay", {
-      method: "POSt",
-    }).then((t) => t.json());
+  }, [amount]);
 
-    const options = {
-      key: __DEV__ ? process.env.RAZORPAY_KEY_ID : "PRODUCTION_KEY",
-      currency: data.currency,
-      amount: data.amount.toString(),
-      order_id: data.id,
-      name: "Donation",
-      description: "thank you for donation.",
-      images: "http://localhost:5000/logo192.png",
-      handle: function (response) {
-        alert(response.razorpay_payment_id);
-        alert(response.razorpay_order_id);
-        alert(response.razorpay_signature);
-      },
-      prefill: {
-        name,
-        email: "test@test.com",
-        phone_number: "9999999999",
-      },
-    };
-    const paymentObject = new window.Razorpay(options);
-    paymentObject.open();
-  }
-
-  return (
-    <div className="App">
-      <h1 class="heading">razorpay payment integration</h1>
-      <a
-        className="link"
-        onClick={displayRazorpay}
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        donate
-      </a>
-    </div>
-  );
-}
+  const showRazoryPay = () => {
+    const form = document.createElement("form");
+    form.setAttribute("action", `${REACT_APP_BACKEND}/payment/callback`);
+    form.setAttribute("method", "POST");
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.setAttribute("data-key", REACT_APP_DATA_KEY);
+    script.setAttribute("data-amount", amount);
+    script.setAttribute("data-name", "Clever Coder");
+    script.setAttribute("data-prefill.contact", "9678452132");
+    script.setAttribute("data-prefill.email", "abc@gmail.com");
+    script.setAttribute("data-order_id", orderId);
+    script.setAttribute("data-prefill.name", "Lalit Patel");
+    script.setAttribute("data-image", `${REACT_APP_BACKEND}/logo`);
+    script.setAttribute("data-buttontext", "Buy NOW!!!");
+    document.body.appendChild(form);
+    form.appendChild(script);
+    const input = document.createElement("input");
+    input.type = "hidden";
+    input.custom = "Hidden Element";
+    input.name = "hidden";
+    form.appendChild(input);
+  };
+  return <div>{amount === 0 && orderId == "" && <h1>Loading...</h1>}</div>;
+};
 
 export default App;
